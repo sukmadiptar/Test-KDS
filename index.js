@@ -2,13 +2,18 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const mysql = require('mysql');
-
 const redis = require("redis");
-const client = redis.createClient(process.env.REDIS_PORT);
+
+const PORT = process.env.PORT || 3000;
+const REDIS_PORT = process.env.REDIS_PORT || 6379;
 
 // parse application/json
 app.use(bodyParser.json());
- 
+
+client.on('connect', function() {
+    console.log('Connected!');
+  });
+
 //create database connection
 const conn = mysql.createConnection({
   host: 'localhost',
@@ -97,6 +102,6 @@ app.delete('/api/products/:id',(req, res) => {
 });
  
 //Server listening
-app.listen(3000,() =>{
-  console.log('Server started on port 3000...');
+app.listen(PORT, () => {
+    console.log(`App listening on port ${PORT}...`);
 });
