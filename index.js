@@ -2,7 +2,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const mysql = require('mysql');
- 
+
+const redis = require("redis");
+const client = redis.createClient(process.env.REDIS_PORT);
+
 // parse application/json
 app.use(bodyParser.json());
  
@@ -22,12 +25,39 @@ conn.connect((err) =>{
  
 //tampilkan semua data product
 app.get('/api/products',(req, res) => {
+
   let sql = "SELECT * FROM product";
   let query = conn.query(sql, (err, results) => {
-    if(err) throw err;
+    if(err) {
+        result(null, err);
+    }
     res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
   });
 });
+
+exports.getProducts = (req, res) => {
+    try {
+      Products.findAllProducts((err, products) => {
+        if (err) {
+          return res.status(400).json({
+            error: "No Products found",
+          });
+        }
+
+        client.setex("productsData", 360, JSON.stringify(products));
+        return res.json({
+          count: products.length,
+          data: {
+            products,
+          },
+        });
+      });
+    } catch (error) {
+      return res.status(500).json({
+        error: "Something went wrong!",
+      });
+    }
+  };
  
 //tampilkan data product berdasarkan id
 app.get('/api/products/:id',(req, res) => {
